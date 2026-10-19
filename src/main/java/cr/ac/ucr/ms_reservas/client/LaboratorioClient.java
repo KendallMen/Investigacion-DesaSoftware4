@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import cr.ac.ucr.ms_reservas.dto.LaboratorioDTO;
 
-@FeignClient(name = "ms-laboratorios", fallback = LaboratorioClientFallback.class)
+@FeignClient(name = "ms-laboratorios",
+             url = "${clientes.laboratorios.url:}",
+             fallbackFactory = LaboratorioClientFallbackFactory.class)
 public interface LaboratorioClient {
 
     @GetMapping("/api/laboratorios/{id}")

@@ -8,11 +8,6 @@ import org.springframework.stereotype.Component;
 public class ReservasProperties {
     private int maxHoras = 2;
 
-    public int getMaxHoras() {
-        return maxHoras;
-    }
-
-    public void setMaxHoras(int maxHoras) {
-        this.maxHoras = maxHoras;
-    }
+    public int getMaxHoras() { return maxHoras; }
+    public void setMaxHoras(int maxHoras) { this.maxHoras = maxHoras; }
 }

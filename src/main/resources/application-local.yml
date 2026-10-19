@@ -1,0 +1,16 @@
+spring:
+  cloud:
+    kubernetes:
+      enabled: false
+      discovery:
+        enabled: false
+      reload:
+        enabled: false
+    loadbalancer:
+      enabled: false
+
+clientes:
+  usuarios:
+    url: http://localhost:8080
+  laboratorios:
+    url: http://localhost:8080
