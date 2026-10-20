@@ -1,0 +1,39 @@
+# SQL Server no ejecuta scripts al iniciar (como PostgreSQL), por eso este Job
+# crea las tres bases si no existen. Es idempotente: se puede repetir sin problema.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: crear-bases
+  namespace: reservas-lab
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: crear-bases
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-secret
+                  key: DB_PASSWORD
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "Esperando a SQL Server..."
+              for i in {1..60}; do
+                if /opt/mssql-tools18/bin/sqlcmd -C -S sqlserver -U sa -P "$DB_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; then
+                  READY=1
+                  break
+                fi
+                sleep 5
+              done
+              if [ -z "$READY" ]; then
+                echo "SQL Server no respondió a tiempo"
+                exit 1
+              fi
+              echo "Creando bases de datos..."
+              /opt/mssql-tools18/bin/sqlcmd -C -b -S sqlserver -U sa -P "$DB_PASSWORD" -Q "IF DB_ID('usuarios_db') IS NULL CREATE DATABASE usuarios_db; IF DB_ID('laboratorios_db') IS NULL CREATE DATABASE laboratorios_db; IF DB_ID('reservas_db') IS NULL CREATE DATABASE reservas_db;"
+              echo "Listo."
