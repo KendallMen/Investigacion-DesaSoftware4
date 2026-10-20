@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: reservas-lab
+  namespace: reservas-lab
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/usuarios
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-usuarios
+                port:
+                  number: 8080
+          - path: /api/laboratorios
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-laboratorios
+                port:
+                  number: 8080
+          - path: /api/reservas
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-reservas
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

@@ -2,6 +2,21 @@
 
 Esta guía deja a todo el equipo con el mismo entorno para correr el sistema de reservas de laboratorios en Kubernetes. Está escrita para **Windows 10/11 con PowerShell**; al final hay notas para Linux y macOS. Incluye los errores reales que aparecieron al montar el entorno y cómo resolverlos.
 
+Las pruebas del despliegue y el guion de la demostración están en [`pruebas-kubernetes.md`](pruebas-kubernetes.md).
+
+### Estructura del repositorio
+
+```
+<raíz del repo>/
+├── ms-usuarios/        # Spring Boot (C)
+├── ms-laboratorios/    # Spring Boot (C)
+├── ms-reservas/        # Spring Boot (A)
+├── frontend/           # Angular (D)
+├── k8s/                # manifiestos (B); k8s/pendientes/ = componentes sin imagen todavía
+├── docs/               # guía, pruebas y scripts de arranque
+└──build-all.ps1       # construye las imágenes (Windows)
+```
+
 ## 1. Requisitos
 
 | Requisito         | Detalle                                                                            |
@@ -275,15 +290,29 @@ docker images | findstr reservas-lab
 
 Los nombres de carpeta deben coincidir con los del repo, porque el script los usa como nombre de imagen.
 
-## 9.1 Acceder a la aplicación por el Ingress
+## 9.1 Desplegar y acceder por el Ingress
 
-Con el driver Docker en Windows, el Ingress no queda accesible directamente. Dejar corriendo en **otra terminal**:
+```powershell
+kubectl apply -f k8s/
+kubectl get pods -n reservas-lab -w
+```
+
+`kubectl apply -f k8s/` aplica en orden alfabético y no entra a subcarpetas. Los manifiestos de `k8s/pendientes/` se mueven a `k8s/` cuando su imagen exista.
+
+| Ruta                | Service                |
+| ------------------- | ---------------------- |
+| `/api/usuarios`     | `ms-usuarios:8080`     |
+| `/api/laboratorios` | `ms-laboratorios:8080` |
+| `/api/reservas`     | `ms-reservas:8080`     |
+| `/`                 | `frontend:80`          |
+
+En otra terminal, que debe quedar abierta (puede pedir permisos de administrador):
 
 ```powershell
 minikube tunnel -p reservas-lab
 ```
 
-Mientras esté abierto, la aplicación responde en `http://localhost` (el addon indica `127.0.0.1`).
+La aplicación responde en `http://127.0.0.1` (por ejemplo, `Invoke-RestMethod http://127.0.0.1/api/reservas/info`). Las rutas de componentes no desplegados responden 503.
 
 ## 10. Comandos útiles
 

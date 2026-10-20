@@ -10,12 +10,18 @@ spec:
   selector:
     matchLabels:
       app: ms-reservas
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
         app: ms-reservas
     spec:
       serviceAccountName: ms-reservas-sa
+      terminationGracePeriodSeconds: 30
       containers:
         - name: ms-reservas
           image: reservas-lab/ms-reservas:v1
@@ -37,6 +43,11 @@ spec:
                   key: DB_PASSWORD
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=70"
+
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
           resources:
             requests:
               memory: "256Mi"
