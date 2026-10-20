@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-reservas
+  namespace: reservas-lab
+  labels:
+    app: ms-reservas
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-reservas
+  template:
+    metadata:
+      labels:
+        app: ms-reservas
+    spec:
+      serviceAccountName: ms-reservas-sa
+      containers:
+        - name: ms-reservas
+          image: reservas-lab/ms-reservas:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: "sqlserver"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-secret
+                  key: DB_PASSWORD
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "640Mi"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 20
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-reservas
+  namespace: reservas-lab
+spec:
+  selector:
+    app: ms-reservas
+  ports:
+    - port: 8080
+      targetPort: 8080
