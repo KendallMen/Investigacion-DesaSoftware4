@@ -5,7 +5,7 @@ spring:
   application:
     name: ms-reservas
   datasource:
-    url: jdbc:sqlserver://${DB_HOST:localhost}:1433;databaseName=reservas_db;encrypt=false;trustServerCertificate=true
+    url: jdbc:sqlserver://${DB_HOST:localhost}:1433;databaseName=reservas_db;encrypt=false;trustServerCertificate=true;sendTimeAsDatetime=false
     username: ${DB_USER:sa}
     password: ${DB_PASSWORD}
   jpa:
