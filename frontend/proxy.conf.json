@@ -1,0 +1,14 @@
+{
+  "/api/usuarios": {
+    "target": "http://localhost:8081",
+    "secure": false
+  },
+  "/api/laboratorios": {
+    "target": "http://localhost:8082",
+    "secure": false
+  },
+  "/api/reservas": {
+    "target": "http://localhost:8083",
+    "secure": false
+  }
+}
