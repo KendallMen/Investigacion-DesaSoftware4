@@ -1,0 +1,109 @@
+<section class="pagina">
+  <h1>Reservas</h1>
+
+  @if (errorCatalogos()) {
+    <p class="alerta advertencia">
+      {{ errorCatalogos() }}
+      <button type="button" class="secundario" (click)="cargarCatalogos()">Reintentar</button>
+    </p>
+  }
+
+  <div class="columnas">
+    <form class="tarjeta formulario" (ngSubmit)="crear()">
+      <h2>Nueva reserva</h2>
+
+      <label>
+        Usuario
+        <select name="usuarioId" [(ngModel)]="nueva.usuarioId" required>
+          <option [ngValue]="null" disabled>Seleccione…</option>
+          @for (u of usuarios(); track u.id) {
+            <option [ngValue]="u.id">{{ u.nombre }} ({{ u.carnet }})</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Laboratorio
+        <select name="laboratorioId" [(ngModel)]="nueva.laboratorioId" required>
+          <option [ngValue]="null" disabled>Seleccione…</option>
+          @for (l of laboratorios(); track l.id) {
+            <option [ngValue]="l.id">
+              {{ l.nombre }} · {{ l.edificio }}{{ l.disponible ? '' : ' (no disponible)' }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Fecha
+        <input name="fecha" type="date" [(ngModel)]="nueva.fecha" required />
+      </label>
+
+      <div class="fila">
+        <label>
+          Hora de inicio
+          <input name="horaInicio" type="time" [(ngModel)]="nueva.horaInicio" required />
+        </label>
+        <label>
+          Hora de fin
+          <input name="horaFin" type="time" [(ngModel)]="nueva.horaFin" required />
+        </label>
+      </div>
+
+      <button type="submit" [disabled]="guardando()">
+        {{ guardando() ? 'Reservando…' : 'Reservar' }}
+      </button>
+
+      @if (error()) {
+        <p class="alerta error" role="alert">{{ error() }}</p>
+      }
+      @if (exito()) {
+        <p class="alerta exito">{{ exito() }}</p>
+      }
+    </form>
+
+    <div class="tarjeta">
+      <div class="encabezado-tabla">
+        <h2>Reservas ({{ reservas().length }})</h2>
+        <div class="acciones">
+          <select
+            aria-label="Filtrar por usuario"
+            [ngModel]="filtroUsuario()"
+            (ngModelChange)="cambiarFiltro($event)"
+          >
+            <option [ngValue]="null">Todos los usuarios</option>
+            @for (u of usuarios(); track u.id) {
+              <option [ngValue]="u.id">{{ u.nombre }}</option>
+            }
+          </select>
+          <button type="button" class="secundario" (click)="cargarReservas()">Actualizar</button>
+        </div>
+      </div>
+
+      @if (cargando()) {
+        <p class="vacio">Cargando…</p>
+      } @else {
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Usuario</th><th>Laboratorio</th><th>Fecha</th><th>Horario</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (r of reservas(); track r.id) {
+              <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ nombreUsuario(r.usuarioId) }}</td>
+                <td>{{ nombreLaboratorio(r.laboratorioId) }}</td>
+                <td>{{ r.fecha }}</td>
+                <td>{{ hora(r.horaInicio) }}–{{ hora(r.horaFin) }}</td>
+                <td><span class="etiqueta si">{{ r.estado }}</span></td>
+                <td><button type="button" class="peligro" (click)="eliminar(r)">Eliminar</button></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="vacio">No hay reservas.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</section>
