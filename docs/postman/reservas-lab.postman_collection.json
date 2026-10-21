@@ -1,0 +1,1493 @@
+{
+  "info": {
+    "_postman_id": "d2cb67d7-7ed1-4a52-961b-09843b0df6b8",
+    "name": "Reservas de laboratorios",
+    "description": "Pruebas de ms-usuarios, ms-laboratorios y ms-reservas.\n\nElegir el entorno 'Minikube (Ingress)' o 'Local' antes de ejecutar. Las carpetas 1 a 3 se pueden correr completas con el Runner; cada prueba limpia lo que crea. La carpeta 4 es para la demostración y necesita pasos con kubectl (ver la descripción de cada petición).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. ms-usuarios",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lista con al menos 5 usuarios\", () => pm.expect(pm.response.json()).to.be.an(\"array\").with.length.at.least(5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario 1 (contrato con ms-reservas)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/1",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tiene los campos del UsuarioDTO\", () => pm.expect(pm.response.json()).to.have.all.keys(\"id\",\"nombre\",\"carnet\",\"correo\",\"carrera\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Info (Pod que responde)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/info",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "info"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve servicio y pod\", () => { const j = pm.response.json(); pm.expect(j.pod).to.be.a(\"string\").and.not.empty; console.log(\"Pod que respondió:\", j.pod); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario de Prueba\",\n  \"carnet\": \"{{carnetNuevo}}\",\n  \"correo\": \"prueba@ucr.ac.cr\",\n  \"carrera\": \"Informática Empresarial\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Devuelve el id generado\", () => pm.expect(j.id).to.be.a(\"number\"));",
+                  "pm.collectionVariables.set(\"usuarioId\", j.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"carnetNuevo\", \"T\" + Date.now().toString().slice(-7));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar usuario creado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/{{usuarioId}}",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario de Prueba Editado\",\n  \"carnet\": \"{{carnetNuevo}}\",\n  \"correo\": \"editado@ucr.ac.cr\",\n  \"carrera\": \"Computación e Informática\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Se guardó el cambio\", () => pm.expect(pm.response.json().nombre).to.eql(\"Usuario de Prueba Editado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 409: carnet repetido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Duplicado\",\n  \"carnet\": \"B10001\",\n  \"correo\": \"dup@ucr.ac.cr\",\n  \"carrera\": \"Informática\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 400: validaciones (@NotBlank, @Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"carnet\": \"B99999\",\n  \"correo\": \"no-es-correo\",\n  \"carrera\": \"Informática\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: correo\", () => pm.expect(pm.response.json().mensaje).to.include(\"correo\"));",
+                  "pm.test(\"Mensaje: nombre\", () => pm.expect(pm.response.json().mensaje).to.include(\"nombre\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: usuario inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/999999",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: no existe\", () => pm.expect(pm.response.json().mensaje).to.include(\"no existe\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar usuario creado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/{{usuarioId}}",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: usuario ya eliminado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/{{usuarioId}}",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. ms-laboratorios",
+      "item": [
+        {
+          "name": "Listar laboratorios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lista con al menos 4 laboratorios\", () => pm.expect(pm.response.json()).to.be.an(\"array\").with.length.at.least(4));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener laboratorio 1 (contrato con ms-reservas)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios/1",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tiene los campos del LaboratorioDTO\", () => pm.expect(pm.response.json()).to.have.all.keys(\"id\",\"nombre\",\"edificio\",\"capacidad\",\"disponible\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Info (Pod que responde)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios/info",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios",
+                "info"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve servicio y pod\", () => { const j = pm.response.json(); pm.expect(j.pod).to.be.a(\"string\").and.not.empty; console.log(\"Pod que respondió:\", j.pod); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear laboratorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{labNuevo}}\",\n  \"edificio\": \"Edificio de Pruebas\",\n  \"capacidad\": 20,\n  \"disponible\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Devuelve el id generado\", () => pm.expect(j.id).to.be.a(\"number\"));",
+                  "pm.collectionVariables.set(\"laboratorioId\", j.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"labNuevo\", \"Lab Prueba \" + Date.now().toString().slice(-7));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar laboratorio creado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios/{{laboratorioId}}",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios",
+                "{{laboratorioId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{labNuevo}}\",\n  \"edificio\": \"Edificio de Pruebas\",\n  \"capacidad\": 35,\n  \"disponible\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Se guardó el cambio\", () => { const j = pm.response.json(); pm.expect(j.capacidad).to.eql(35); pm.expect(j.disponible).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 409: nombre repetido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Laboratorio de Redes\",\n  \"edificio\": \"X\",\n  \"capacidad\": 10,\n  \"disponible\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 400: validaciones (@NotBlank, @Min)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lab Inválido\",\n  \"edificio\": \"\",\n  \"capacidad\": 0,\n  \"disponible\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: capacidad\", () => pm.expect(pm.response.json().mensaje).to.include(\"capacidad\"));",
+                  "pm.test(\"Mensaje: edificio\", () => pm.expect(pm.response.json().mensaje).to.include(\"edificio\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: laboratorio inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios/999999",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: no existe\", () => pm.expect(pm.response.json().mensaje).to.include(\"no existe\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar laboratorio creado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios/{{laboratorioId}}",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios",
+                "{{laboratorioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: laboratorio ya eliminado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{laboratoriosUrl}}/api/laboratorios/{{laboratorioId}}",
+              "host": [
+                "{{laboratoriosUrl}}"
+              ],
+              "path": [
+                "api",
+                "laboratorios",
+                "{{laboratorioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. ms-reservas",
+      "item": [
+        {
+          "name": "Listar reservas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Info (Pod que responde)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas/info",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "info"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve servicio y pod\", () => { const j = pm.response.json(); pm.expect(j.pod).to.be.a(\"string\").and.not.empty; console.log(\"Pod que respondió:\", j.pod); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear reserva válida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 1,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"08:00:00\",\n  \"horaFin\": \"10:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Queda ACTIVA\", () => pm.expect(j.estado).to.eql(\"ACTIVA\"));",
+                  "pm.collectionVariables.set(\"reservaId\", j.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Fecha futura aleatoria para que la colección se pueda correr varias veces sin cruces",
+                  "const d = new Date(); d.setDate(d.getDate() + 30 + Math.floor(Math.random() * 2000));",
+                  "pm.collectionVariables.set(\"fechaReserva\", d.toISOString().slice(0, 10));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 409: horario cruzado en el mismo laboratorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"laboratorioId\": 1,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"10:30:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: ya está reservado\", () => pm.expect(pm.response.json().mensaje).to.include(\"ya está reservado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mismo horario en otro laboratorio sí se permite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"laboratorioId\": 2,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"10:30:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"reservaId2\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 400: supera el máximo de horas (ConfigMap)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 3,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"08:00:00\",\n  \"horaFin\": \"11:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: no puede superar\", () => pm.expect(pm.response.json().mensaje).to.include(\"no puede superar\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 400: hora de fin antes del inicio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 3,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"10:00:00\",\n  \"horaFin\": \"09:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: posterior\", () => pm.expect(pm.response.json().mensaje).to.include(\"posterior\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 400: campos obligatorios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 409: laboratorio no disponible (Lab 4)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 4,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"08:00:00\",\n  \"horaFin\": \"09:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: no está disponible\", () => pm.expect(pm.response.json().mensaje).to.include(\"no está disponible\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: usuario inexistente (llamada Feign)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 999999,\n  \"laboratorioId\": 1,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"13:00:00\",\n  \"horaFin\": \"14:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: usuario\", () => pm.expect(pm.response.json().mensaje).to.include(\"usuario\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: laboratorio inexistente (llamada Feign)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 999999,\n  \"fecha\": \"{{fechaReserva}}\",\n  \"horaInicio\": \"13:00:00\",\n  \"horaFin\": \"14:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });",
+                  "pm.test(\"Mensaje: laboratorio\", () => pm.expect(pm.response.json().mensaje).to.include(\"laboratorio\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservas del usuario 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas/usuario/1",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "usuario",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todas son del usuario 1\", () => pm.response.json().forEach(r => pm.expect(r.usuarioId).to.eql(1)));",
+                  "pm.test(\"Incluye la reserva creada\", () => pm.expect(pm.response.json().map(r => r.id)).to.include(pm.collectionVariables.get(\"reservaId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar reserva creada",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas/{{reservaId}}",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar la segunda reserva",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas/{{reservaId2}}",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId2}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error 404: eliminar reserva inexistente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas/{{reservaId}}",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Formato de error {status, mensaje}\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"status\"); pm.expect(j).to.have.property(\"mensaje\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Necesita ms-usuarios y ms-laboratorios funcionando (usa el usuario 1-2 y los laboratorios 1-4 de data.sql)."
+    },
+    {
+      "name": "4. Demostración",
+      "item": [
+        {
+          "name": "Balanceo: ¿qué Pod respondió?",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas/info",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "info"
+              ]
+            },
+            "description": "Ejecutar varias veces (o con el Runner, 10 iteraciones) por el Ingress: el campo pod alterna entre las réplicas. En la consola de Postman se imprime cada nombre."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve servicio y pod\", () => { const j = pm.response.json(); pm.expect(j.pod).to.be.a(\"string\").and.not.empty; console.log(\"Pod que respondió:\", j.pod); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resiliencia: fallback con ms-laboratorios caído",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 1,\n  \"fecha\": \"2030-01-15\",\n  \"horaInicio\": \"15:00:00\",\n  \"horaFin\": \"16:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Antes de ejecutar: kubectl scale deployment ms-laboratorios -n reservas-lab --replicas=0\nDespués: kubectl scale deployment ms-laboratorios -n reservas-lab --replicas=2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 503\", () => pm.response.to.have.status(503));",
+                  "pm.test(\"Mensaje: Servicio de laboratorios no disponible\", () => pm.expect(pm.response.json().mensaje).to.include(\"Servicio de laboratorios no disponible\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Configuración en vivo: reserva de 2 horas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{reservasUrl}}/api/reservas",
+              "host": [
+                "{{reservasUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 1,\n  \"laboratorioId\": 2,\n  \"fecha\": \"2030-01-16\",\n  \"horaInicio\": \"15:00:00\",\n  \"horaFin\": \"17:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ejecutar con max-horas=2 (201), cambiar el ConfigMap a 1 sin reiniciar Pods y volver a ejecutar (400: La reserva no puede superar las 1 horas). Borrar después la reserva creada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Con max-horas=2 se crea (201); con max-horas=1 se rechaza (400)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 400]));",
+                  "console.log(pm.response.code, pm.response.text());"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "carnetNuevo",
+      "value": ""
+    },
+    {
+      "key": "usuarioId",
+      "value": ""
+    },
+    {
+      "key": "labNuevo",
+      "value": ""
+    },
+    {
+      "key": "laboratorioId",
+      "value": ""
+    },
+    {
+      "key": "fechaReserva",
+      "value": ""
+    },
+    {
+      "key": "reservaId",
+      "value": ""
+    },
+    {
+      "key": "reservaId2",
+      "value": ""
+    }
+  ]
+}

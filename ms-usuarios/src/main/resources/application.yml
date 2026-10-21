@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ms-usuarios
+  datasource:
+    url: jdbc:sqlserver://${DB_HOST:localhost}:1433;databaseName=usuarios_db;encrypt=false;trustServerCertificate=true
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    # data.sql se ejecuta después de que Hibernate crea la tabla
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      # Con 2 réplicas ambas corren data.sql; si una choca con la restricción
+      # UNIQUE del carnet no debe impedir que el Pod arranque.
+      continue-on-error: true
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
