@@ -1,0 +1,71 @@
+<section class="pagina">
+  <h1>Laboratorios</h1>
+
+  <div class="columnas">
+    <form class="tarjeta formulario" (ngSubmit)="crear()">
+      <h2>Nuevo laboratorio</h2>
+
+      <label>
+        Nombre
+        <input name="nombre" [(ngModel)]="nuevo.nombre" required maxlength="100" placeholder="Laboratorio de Cómputo 3" />
+      </label>
+      <label>
+        Edificio
+        <input name="edificio" [(ngModel)]="nuevo.edificio" required maxlength="100" placeholder="Edificio de Ingeniería" />
+      </label>
+      <label>
+        Capacidad
+        <input name="capacidad" type="number" min="1" max="500" [(ngModel)]="nuevo.capacidad" required placeholder="30" />
+      </label>
+      <label class="check">
+        <input name="disponible" type="checkbox" [(ngModel)]="nuevo.disponible" />
+        Disponible para reservas
+      </label>
+
+      <button type="submit" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Crear laboratorio' }}
+      </button>
+
+      @if (error()) {
+        <p class="alerta error">{{ error() }}</p>
+      }
+      @if (exito()) {
+        <p class="alerta exito">{{ exito() }}</p>
+      }
+    </form>
+
+    <div class="tarjeta">
+      <div class="encabezado-tabla">
+        <h2>Lista ({{ laboratorios().length }})</h2>
+        <button type="button" class="secundario" (click)="cargar()">Actualizar</button>
+      </div>
+
+      @if (cargando()) {
+        <p class="vacio">Cargando…</p>
+      } @else {
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Nombre</th><th>Edificio</th><th>Capacidad</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            @for (l of laboratorios(); track l.id) {
+              <tr>
+                <td>{{ l.id }}</td>
+                <td>{{ l.nombre }}</td>
+                <td>{{ l.edificio }}</td>
+                <td>{{ l.capacidad }}</td>
+                <td>
+                  <span class="etiqueta" [class.si]="l.disponible" [class.no]="!l.disponible">
+                    {{ l.disponible ? 'Disponible' : 'No disponible' }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="vacio">No hay laboratorios registrados.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</section>

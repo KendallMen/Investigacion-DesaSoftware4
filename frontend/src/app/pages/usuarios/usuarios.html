@@ -1,0 +1,67 @@
+<section class="pagina">
+  <h1>Usuarios</h1>
+
+  <div class="columnas">
+    <form class="tarjeta formulario" (ngSubmit)="crear()">
+      <h2>Nuevo usuario</h2>
+
+      <label>
+        Nombre
+        <input name="nombre" [(ngModel)]="nuevo.nombre" required maxlength="100" placeholder="Ana Rodríguez Mora" />
+      </label>
+      <label>
+        Carnet
+        <input name="carnet" [(ngModel)]="nuevo.carnet" required maxlength="20" placeholder="B10006" />
+      </label>
+      <label>
+        Correo
+        <input name="correo" type="email" [(ngModel)]="nuevo.correo" required placeholder="ana@ucr.ac.cr" />
+      </label>
+      <label>
+        Carrera
+        <input name="carrera" [(ngModel)]="nuevo.carrera" required maxlength="100" placeholder="Informática Empresarial" />
+      </label>
+
+      <button type="submit" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Crear usuario' }}
+      </button>
+
+      @if (error()) {
+        <p class="alerta error">{{ error() }}</p>
+      }
+      @if (exito()) {
+        <p class="alerta exito">{{ exito() }}</p>
+      }
+    </form>
+
+    <div class="tarjeta">
+      <div class="encabezado-tabla">
+        <h2>Lista ({{ usuarios().length }})</h2>
+        <button type="button" class="secundario" (click)="cargar()">Actualizar</button>
+      </div>
+
+      @if (cargando()) {
+        <p class="vacio">Cargando…</p>
+      } @else {
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Nombre</th><th>Carnet</th><th>Correo</th><th>Carrera</th></tr>
+          </thead>
+          <tbody>
+            @for (u of usuarios(); track u.id) {
+              <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.nombre }}</td>
+                <td>{{ u.carnet }}</td>
+                <td>{{ u.correo }}</td>
+                <td>{{ u.carrera }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="vacio">No hay usuarios registrados.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,11 @@
+<footer class="pie">
+  <span class="pie-titulo">Pods que respondieron</span>
+  @for (e of estados(); track e.servicio) {
+    <span class="pod" [class.caido]="e.pod === null">
+      <strong>{{ e.servicio }}</strong>
+      {{ e.pod ?? 'sin respuesta' }}
+    </span>
+  }
+  <span class="pie-hora">{{ actualizado() }}</span>
+  <button type="button" class="secundario" (click)="actualizar()">Actualizar</button>
+</footer>
